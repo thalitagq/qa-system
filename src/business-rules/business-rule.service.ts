@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateBusinessRuleDto } from './dto/create-business-rule';
+import { CreateBusinessRuleDto } from './bussines-rule.dto';
 import { normalizeText } from './helpers/normalize-text';
 
 @Injectable()
