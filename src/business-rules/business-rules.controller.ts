@@ -1,6 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, Get, Patch, Put } from '@nestjs/common';
 import { BusinessRuleService } from './business-rule.service';
-import { CreateBusinessRuleDto } from './bussines-rule.dto';
+import {
+  CreateBusinessRuleDto,
+  UpdateBusinessRuleDto,
+} from './bussines-rule.dto';
 
 @Controller('business-rules')
 export class BusinessRuleController {
@@ -9,5 +12,20 @@ export class BusinessRuleController {
   @Post()
   create(@Body() dto: CreateBusinessRuleDto) {
     return this.service.create(dto);
+  }
+
+  @Get(':code')
+  findByCode(@Param('code') code: string) {
+    return this.service.findByCode(code);
+  }
+
+  @Put(':code')
+  update(@Param('code') code: string, dto: UpdateBusinessRuleDto) {
+    return this.service.update(code, dto);
+  }
+
+  @Patch(':code/deactivate')
+  deactivate(@Param('code') code: string) {
+    return this.service.deactivate(code);
   }
 }
