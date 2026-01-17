@@ -5,5 +5,11 @@ export class CreateTestCaseDto {
   description?: string;
   type: TestType;
   status: TestStatus;
-  projectId: string;
+}
+
+export class UpdateTestCaseDto {
+  title?: string;
+  description?: string;
+  type?: TestType;
+  status?: TestStatus;
 }
