@@ -11,7 +11,6 @@ export class ProjectService {
       data: {
         name: dto.name,
         description: dto.description,
-        createdAt: new Date(),
       },
     });
   }
@@ -43,7 +42,11 @@ export class ProjectService {
 
     return this.prisma.project.update({
       where: { id },
-      data: { ...dto },
+      data: {
+        name: dto.name,
+        description: dto.description,
+        active: dto.active,
+      },
     });
   }
 
@@ -61,6 +64,7 @@ export class ProjectService {
   private async ensureExists(id: string) {
     const exists = await this.prisma.project.findUnique({
       where: { id },
+      select: { id: true },
     });
 
     if (!exists) {
