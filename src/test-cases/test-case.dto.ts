@@ -13,3 +13,7 @@ export class UpdateTestCaseDto {
   type?: TestType;
   status?: TestStatus;
 }
+
+export class ReplaceTestCaseRulesDto {
+  ruleCodes: string[];
+}

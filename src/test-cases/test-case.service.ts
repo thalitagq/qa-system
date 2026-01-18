@@ -1,20 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTestCaseDto, UpdateTestCaseDto } from './test-case.dto';
+import {
+  ensureBusinessRuleExists,
+  ensureExists,
+  ensureTestCaseExists,
+} from '../common/helpers/ensure-exists';
+import {
+  BAD_REQUEST_MESSAGES,
+  NOT_FOUND_MESSAGES,
+} from '../common/messages/error-messages';
 
 @Injectable()
 export class TestCaseService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(projectId: string, dto: CreateTestCaseDto) {
-    const projetcExists = await this.prisma.project.findUnique({
-      where: { id: projectId },
-      select: { id: true },
-    });
-
-    if (!projetcExists) {
-      throw new NotFoundException('Projeto não encontrado');
-    }
+    await ensureExists(
+      this.prisma.project.findUnique({
+        where: { id: projectId },
+        select: { id: true },
+      }),
+      NOT_FOUND_MESSAGES.PROJECT,
+    );
 
     return this.prisma.testCase.create({
       data: {
@@ -41,7 +53,7 @@ export class TestCaseService {
   }
 
   async update(id: string, dto: UpdateTestCaseDto) {
-    await this.ensureExists(id);
+    await ensureTestCaseExists(this.prisma, id);
 
     return this.prisma.testCase.update({
       where: { id },
@@ -54,14 +66,83 @@ export class TestCaseService {
     });
   }
 
-  private async ensureExists(id: string) {
-    const exists = await this.prisma.testCase.findUnique({
-      where: { id },
+  async addRule(testCaseId: string, ruleCode: string) {
+    await ensureTestCaseExists(this.prisma, testCaseId);
+
+    await ensureBusinessRuleExists(this.prisma, ruleCode);
+
+    const alreadyLinked = await this.prisma.testCase.findFirst({
+      where: {
+        id: testCaseId,
+        rules: { some: { code: ruleCode } },
+      },
       select: { id: true },
     });
 
-    if (!exists) {
-      throw new NotFoundException('Caso de teste não encontrado');
+    if (alreadyLinked) {
+      throw new BadRequestException(BAD_REQUEST_MESSAGES.RULE_ALREADY_LINKED);
     }
+
+    return this.prisma.testCase.update({
+      where: { id: testCaseId },
+      data: {
+        rules: {
+          connect: { code: ruleCode },
+        },
+      },
+      include: { rules: true },
+    });
+  }
+
+  async deleteRule(testCaseId: string, ruleCode: string) {
+    await ensureTestCaseExists(this.prisma, testCaseId);
+
+    await ensureExists(
+      this.prisma.businessRule.findUnique({
+        where: { code: ruleCode },
+        select: { code: true },
+      }),
+      NOT_FOUND_MESSAGES.BUSINESS_RULE,
+    );
+
+    return this.prisma.testCase.update({
+      where: { id: testCaseId },
+      data: { rules: { disconnect: { code: ruleCode } } },
+      include: { rules: true },
+    });
+  }
+
+  async findBusinessRulesByTestCaseId(id: string) {
+    await ensureTestCaseExists(this.prisma, id);
+
+    const testCase = await this.prisma.testCase.findUnique({
+      select: { rules: true },
+      where: { id },
+    });
+
+    return testCase.rules;
+  }
+
+  async replaceRules(testCaseId: string, ruleCodes: string[]) {
+    await ensureTestCaseExists(this.prisma, testCaseId);
+
+    const existingRules = await this.prisma.businessRule.findMany({
+      where: { code: { in: ruleCodes } },
+      select: { code: true },
+    });
+
+    if (existingRules.length !== ruleCodes.length) {
+      throw new BadRequestException(BAD_REQUEST_MESSAGES.INVALID_RULE);
+    }
+
+    return this.prisma.testCase.update({
+      where: { id: testCaseId },
+      data: {
+        rules: {
+          set: ruleCodes.map((code: string) => ({ code })),
+        },
+      },
+      include: { rules: true },
+    });
   }
 }
