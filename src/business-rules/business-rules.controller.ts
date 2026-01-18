@@ -19,6 +19,11 @@ export class BusinessRuleController {
     return this.service.findByCode(code);
   }
 
+  @Get(':code/test-cases')
+  findTestCasesByBusinessRules(@Param('code') code: string) {
+    return this.service.findTestCasesByBusinessRule(code);
+  }
+
   @Put(':code')
   update(@Param('code') code: string, dto: UpdateBusinessRuleDto) {
     return this.service.update(code, dto);

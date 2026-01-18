@@ -10,6 +10,11 @@ import {
 } from './bussines-rule.dto';
 import { normalizeText } from './helpers/normalize-text';
 import { randomUUID } from 'crypto';
+import { ensureBusinessRuleExists } from '../common/helpers/ensure-exists';
+import {
+  BAD_REQUEST_MESSAGES,
+  NOT_FOUND_MESSAGES,
+} from '../common/messages/error-messages';
 
 @Injectable()
 export class BusinessRuleService {
@@ -23,7 +28,7 @@ export class BusinessRuleService {
     });
     if (exists) {
       throw new BadRequestException(
-        'Já existe uma regra com o mesmo significado',
+        BAD_REQUEST_MESSAGES.DUPLICATED_BUSINESS_RULE,
       );
     }
 
@@ -40,11 +45,10 @@ export class BusinessRuleService {
   async findByCode(code: string) {
     const businessRule = await this.prisma.businessRule.findUnique({
       where: { code },
-      include: { testCases: true },
     });
 
     if (!businessRule) {
-      throw new NotFoundException('Regra de negócio não encontrada');
+      throw new NotFoundException(NOT_FOUND_MESSAGES.BUSINESS_RULE);
     }
 
     return businessRule;
@@ -56,7 +60,7 @@ export class BusinessRuleService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Regra de negócio não encontrada');
+      throw new NotFoundException(NOT_FOUND_MESSAGES.BUSINESS_RULE);
     }
 
     let normalizedTitle = existing.normalizedTitle;
@@ -70,23 +74,23 @@ export class BusinessRuleService {
 
       if (duplicated && duplicated.code !== code) {
         throw new BadRequestException(
-          'Já existe uma regra com o mesmo significado',
+          BAD_REQUEST_MESSAGES.DUPLICATED_BUSINESS_RULE,
         );
       }
-
-      return this.prisma.businessRule.update({
-        where: { code },
-        data: {
-          title: dto.title,
-          description: dto.description,
-          normalizedTitle,
-        },
-      });
     }
+
+    return this.prisma.businessRule.update({
+      where: { code },
+      data: {
+        title: dto.title,
+        description: dto.description,
+        normalizedTitle,
+      },
+    });
   }
 
   async deactivate(code: string) {
-    await this.ensureExists(code);
+    await ensureBusinessRuleExists(this.prisma, code);
 
     return this.prisma.businessRule.update({
       data: { active: false },
@@ -94,14 +98,14 @@ export class BusinessRuleService {
     });
   }
 
-  private async ensureExists(code: string) {
-    const exists = await this.prisma.businessRule.findUnique({
-      where: { code },
-    });
+  async findTestCasesByBusinessRule(ruleCode: string) {
+    await ensureBusinessRuleExists(this.prisma, ruleCode);
 
-    if (!exists) {
-      throw new NotFoundException('Regra de negócio não encontrada');
-    }
+    return this.prisma.testCase.findMany({
+      where: {
+        rules: { some: { code: ruleCode } },
+      },
+    });
   }
 
   private generateCode(): string {
