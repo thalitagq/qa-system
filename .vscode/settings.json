@@ -1,5 +1,9 @@
 {
   "conventionalCommits.scopes": [
-    "project"
+    "project",
+    "schema",
+    "business-rules",
+    "test-cases",
+    "test-steps"
   ]
 }

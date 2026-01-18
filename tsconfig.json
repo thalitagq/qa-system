@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "target": "ES2022",
 
     "esModuleInterop": true,
@@ -14,6 +14,12 @@
     "skipLibCheck": true,
 
     "outDir": "./dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@prisma/*": ["prisma/*"]
+    },
+    "ignoreDeprecations": "6.0"
   }
 }
