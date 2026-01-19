@@ -20,6 +20,5 @@
       "@/*": ["src/*"],
       "@prisma/*": ["prisma/*"]
     },
-    "ignoreDeprecations": "6.0"
   }
 }
