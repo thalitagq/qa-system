@@ -7,26 +7,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTestCaseDto, UpdateTestCaseDto } from './test-case.dto';
 import {
   ensureBusinessRuleExists,
-  ensureExists,
+  ensureProjectExists,
   ensureTestCaseExists,
 } from '../common/helpers/ensure-exists';
-import {
-  BAD_REQUEST_MESSAGES,
-  NOT_FOUND_MESSAGES,
-} from '../common/messages/error-messages';
+import { BAD_REQUEST_MESSAGES } from '../common/messages/error-messages';
 
 @Injectable()
 export class TestCaseService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(projectId: string, dto: CreateTestCaseDto) {
-    await ensureExists(
-      this.prisma.project.findUnique({
-        where: { id: projectId },
-        select: { id: true },
-      }),
-      NOT_FOUND_MESSAGES.PROJECT,
-    );
+    await ensureProjectExists(this.prisma, projectId);
 
     return this.prisma.testCase.create({
       data: {
@@ -97,13 +88,7 @@ export class TestCaseService {
   async deleteRule(testCaseId: string, ruleCode: string) {
     await ensureTestCaseExists(this.prisma, testCaseId);
 
-    await ensureExists(
-      this.prisma.businessRule.findUnique({
-        where: { code: ruleCode },
-        select: { code: true },
-      }),
-      NOT_FOUND_MESSAGES.BUSINESS_RULE,
-    );
+    await ensureBusinessRuleExists(this.prisma, ruleCode);
 
     return this.prisma.testCase.update({
       where: { id: testCaseId },
@@ -120,7 +105,7 @@ export class TestCaseService {
       where: { id },
     });
 
-    return testCase.rules;
+    return testCase?.rules ?? [];
   }
 
   async replaceRules(testCaseId: string, ruleCodes: string[]) {
