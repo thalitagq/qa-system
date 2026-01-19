@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProjectDto, UpdateProjectDto } from './project.dto';
+import { ensureProjectExists } from '@/common/helpers/ensure-exists';
 
 @Injectable()
 export class ProjectService {
@@ -38,7 +39,7 @@ export class ProjectService {
   }
 
   async update(id: string, dto: UpdateProjectDto) {
-    await this.ensureExists(id);
+    await ensureProjectExists(this.prisma, id);
 
     return this.prisma.project.update({
       where: { id },
@@ -51,7 +52,7 @@ export class ProjectService {
   }
 
   async deactivate(id: string) {
-    await this.ensureExists(id);
+    await ensureProjectExists(this.prisma, id);
 
     return this.prisma.project.update({
       where: { id },
@@ -59,16 +60,5 @@ export class ProjectService {
         active: false,
       },
     });
-  }
-
-  private async ensureExists(id: string) {
-    const exists = await this.prisma.project.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-
-    if (!exists) {
-      throw new NotFoundException('Projeto não encontrado');
-    }
   }
 }

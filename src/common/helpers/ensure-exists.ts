@@ -40,3 +40,13 @@ export async function ensureBusinessRuleExists(
     NOT_FOUND_MESSAGES.BUSINESS_RULE,
   );
 }
+
+export async function ensureProjectExists(prisma: PrismaService, id: string) {
+  return ensureExists(
+    prisma.project.findUnique({
+      where: { id: id },
+      select: { id: true },
+    }),
+    NOT_FOUND_MESSAGES.PROJECT,
+  );
+}
