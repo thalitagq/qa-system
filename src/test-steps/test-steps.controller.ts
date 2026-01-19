@@ -15,8 +15,11 @@ export class TestStepsController {
   }
 
   @Get(':testCaseId/:testStepId')
-  findById(@Param('testStepId') testStepId: string) {
-    return this.service.findById(testStepId);
+  findById(
+    @Param('testCaseId') testCaseId: string,
+    @Param('testStepId') testStepId: string,
+  ) {
+    return this.service.findById(testCaseId, testStepId);
   }
 
   @Get(':testCaseId')

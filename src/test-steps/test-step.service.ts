@@ -5,20 +5,18 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTestStepDto, UpdateTestStepDto } from './test-step.dto';
+import { ensureTestCaseExists } from '@/common/helpers/ensure-exists';
+import {
+  BAD_REQUEST_MESSAGES,
+  NOT_FOUND_MESSAGES,
+} from '@/common/messages/error-messages';
 
 @Injectable()
 export class TestStepService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(testCaseId: string, dto: CreateTestStepDto) {
-    const testCaseExists = await this.prisma.testCase.findUnique({
-      where: { id: testCaseId },
-      select: { id: true },
-    });
-
-    if (!testCaseExists) {
-      throw new NotFoundException('Caso de teste não encontrado');
-    }
+    await ensureTestCaseExists(this.prisma, testCaseId);
 
     const orderExists = await this.prisma.testStep.findFirst({
       where: { testCaseId, order: dto.order },
@@ -37,22 +35,23 @@ export class TestStepService {
       },
     });
   }
+  async findById(testCaseId: string, testStepId: string) {
+    await ensureTestCaseExists(this.prisma, testCaseId);
 
-  async findById(id: string) {
-    const testStep = await this.prisma.testStep.findUnique({
-      where: { id },
+    const step = await this.prisma.testStep.findUnique({
+      where: { id: testStepId },
       include: { testCase: true },
     });
 
-    if (!testStep) {
-      throw new NotFoundException('Passo de teste não encontrado');
+    if (!step || step.testCaseId !== testCaseId) {
+      throw new NotFoundException(NOT_FOUND_MESSAGES.TEST_STEP);
     }
 
-    return testStep;
+    return step;
   }
 
   async update(testCaseId: string, testStepId: string, dto: UpdateTestStepDto) {
-    await this.ensureTestCaseExists(testCaseId);
+    await ensureTestCaseExists(this.prisma, testCaseId);
 
     await this.ensureExists(testStepId, testCaseId);
 
@@ -65,7 +64,7 @@ export class TestStepService {
     });
 
     if (orderExists) {
-      throw new BadRequestException('Já existe um passo com essa ordem');
+      throw new BadRequestException(BAD_REQUEST_MESSAGES.STEP_ORDER_EXISTS);
     }
 
     return this.prisma.testStep.update({
@@ -79,7 +78,7 @@ export class TestStepService {
   }
 
   async findByTestCaseId(testCaseId: string) {
-    await this.ensureTestCaseExists(testCaseId);
+    await ensureTestCaseExists(this.prisma, testCaseId);
 
     return this.prisma.testStep.findMany({
       where: { testCaseId },
@@ -94,24 +93,13 @@ export class TestStepService {
     });
 
     if (!step) {
-      throw new NotFoundException('Passo de teste não encontrado');
+      throw new NotFoundException(NOT_FOUND_MESSAGES.TEST_STEP);
     }
 
     if (step.testCaseId !== testCaseId) {
-      throw new NotFoundException(
+      throw new BadRequestException(
         'Passo não pertence ao caso de teste informado',
       );
-    }
-  }
-
-  private async ensureTestCaseExists(testCaseId: string) {
-    const exists = await this.prisma.testCase.findUnique({
-      where: { id: testCaseId },
-      select: { id: true },
-    });
-
-    if (!exists) {
-      throw new NotFoundException('Caso de teste não encontrado');
     }
   }
 }
