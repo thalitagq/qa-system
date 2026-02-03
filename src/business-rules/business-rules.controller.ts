@@ -4,13 +4,13 @@ import {
   CreateBusinessRuleDto,
   UpdateBusinessRuleDto,
 } from './bussines-rule.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-@ApiTags('BusinessRules')
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+@ApiTags('Regras de negócio')
 @Controller('business-rules')
 export class BusinessRuleController {
   constructor(private readonly service: BusinessRuleService) {}
 
-  @ApiOperation({ summary: 'Criar uma regra de negócio' })
+  @ApiOperation({ summary: 'Cria uma regra de negócio' })
   @ApiResponse({
     status: 201,
     description: 'Regra de negócio criada com sucesso',
@@ -20,6 +20,7 @@ export class BusinessRuleController {
     return this.service.create(dto);
   }
 
+  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
   @ApiOperation({ summary: 'Busca regra de negócio por código' })
   @ApiResponse({ status: 200, description: '' })
   @Get(':code')
@@ -27,6 +28,7 @@ export class BusinessRuleController {
     return this.service.findByCode(code);
   }
 
+  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
   @ApiOperation({
     summary:
       'Lista todos os casos de teste relacionados com a regra de negócio',
@@ -37,6 +39,7 @@ export class BusinessRuleController {
     return this.service.findTestCasesByBusinessRule(code);
   }
 
+  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
   @ApiOperation({ summary: 'Atualiza regra de negócio' })
   @ApiResponse({
     status: 200,
@@ -47,7 +50,8 @@ export class BusinessRuleController {
     return this.service.update(code, dto);
   }
 
-  @ApiOperation({ summary: 'Desativar regra de negócio' })
+  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
+  @ApiOperation({ summary: 'Desativa regra de negócio' })
   @ApiResponse({
     status: 200,
     description: 'Regra de negócio desativada com sucesso',
