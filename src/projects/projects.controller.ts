@@ -1,45 +1,64 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto, UpdateProjectDto } from './project.dto';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiIdParam,
+  ApiSuccessResponse,
+  ApiErrorResponse,
+} from '@/common/swagger';
+
 @ApiTags('Projetos')
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly service: ProjectService) {}
 
   @ApiOperation({ summary: 'Cria um projeto' })
-  @ApiResponse({ status: 201, description: 'Projeto criado com sucesso' })
+  @ApiSuccessResponse(201, 'Projeto criado com sucesso', {
+    id: 'uuid',
+    name: 'Projeto QA',
+    active: true,
+  })
   @Post()
   create(@Body() dto: CreateProjectDto) {
     return this.service.create(dto);
   }
 
-  @ApiOperation({ summary: 'Lista todos os projetos' })
-  @ApiResponse({ status: 200, description: '' })
+  @ApiOperation({ summary: 'Lista todos os projetos ativos' })
+  @ApiSuccessResponse(200, 'Projetos listados com sucesso', [
+    { id: 'uuid', name: 'Projeto QA', active: true },
+  ])
   @Get()
   findAll() {
     return this.service.findAll();
   }
 
-  @ApiParam({ name: 'id', description: 'ID do projeto' })
+  @ApiIdParam()
   @ApiOperation({ summary: 'Busca projeto por id' })
-  @ApiResponse({ status: 200, description: '' })
+  @ApiSuccessResponse(200, 'Projeto encontrado', {
+    id: 'uuid',
+    name: 'Projeto QA',
+    active: true,
+  })
+  @ApiErrorResponse(404, 'Projeto não encontrado', 'Projeto não encontrado')
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.service.findById(id);
   }
 
-  @ApiParam({ name: 'id', description: 'ID do projeto' })
+  @ApiIdParam()
   @ApiOperation({ summary: 'Atualiza projeto' })
-  @ApiResponse({ status: 200, description: 'Projeto atualizado com sucesso' })
+  @ApiSuccessResponse(200, 'Projeto atualizado com sucesso')
+  @ApiErrorResponse(404, 'Projeto não encontrado', 'Projeto não encontrado')
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
     return this.service.update(id, dto);
   }
 
-  @ApiParam({ name: 'id', description: 'ID do projeto' })
+  @ApiIdParam()
   @ApiOperation({ summary: 'Desativa projeto' })
-  @ApiResponse({ status: 200, description: 'Projeto desativado com sucesso' })
+  @ApiSuccessResponse(200, 'Projeto desativado com sucesso')
+  @ApiErrorResponse(404, 'Projeto não encontrado', 'Projeto não encontrado')
   @Patch(':id/deactivate')
   deactivate(@Param('id') id: string) {
     return this.service.deactivate(id);

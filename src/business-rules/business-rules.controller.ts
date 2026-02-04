@@ -1,61 +1,80 @@
 import { Body, Controller, Param, Post, Get, Patch, Put } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BusinessRuleService } from './business-rule.service';
 import {
   CreateBusinessRuleDto,
   UpdateBusinessRuleDto,
 } from './bussines-rule.dto';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCodeParam,
+  ApiErrorResponse,
+  ApiSuccessResponse,
+} from '@/common/swagger';
+
 @ApiTags('Regras de negócio')
 @Controller('business-rules')
 export class BusinessRuleController {
   constructor(private readonly service: BusinessRuleService) {}
 
   @ApiOperation({ summary: 'Cria uma regra de negócio' })
-  @ApiResponse({
-    status: 201,
-    description: 'Regra de negócio criada com sucesso',
+  @ApiSuccessResponse(201, 'Regra criada com sucesso', {
+    code: 'BR-ABC123',
+    title: 'Pagamento válido',
   })
+  @ApiErrorResponse(
+    400,
+    'Regra duplicada',
+    'Já existe uma regra com o mesmo significado',
+  )
   @Post()
   create(@Body() dto: CreateBusinessRuleDto) {
     return this.service.create(dto);
   }
 
-  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
+  @ApiCodeParam()
   @ApiOperation({ summary: 'Busca regra de negócio por código' })
-  @ApiResponse({ status: 200, description: '' })
+  @ApiSuccessResponse(200, 'Regra encontrada', {
+    code: 'BR-ABC123',
+    title: 'Pagamento válido',
+  })
+  @ApiErrorResponse(
+    404,
+    'Regra não encontrada',
+    'Regra de negócio não encontrada',
+  )
   @Get(':code')
   findByCode(@Param('code') code: string) {
     return this.service.findByCode(code);
   }
 
-  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
+  @ApiCodeParam()
   @ApiOperation({
-    summary:
-      'Lista todos os casos de teste relacionados com a regra de negócio',
+    summary: 'Lista casos de teste relacionados à regra de negócio',
   })
-  @ApiResponse({ status: 200, description: '' })
+  @ApiSuccessResponse(200, 'Casos de teste listados', [
+    { id: 'uuid', title: 'CT-Login válido' },
+  ])
   @Get(':code/test-cases')
-  findTestCasesByBusinessRules(@Param('code') code: string) {
+  findTestCasesByBusinessRule(@Param('code') code: string) {
     return this.service.findTestCasesByBusinessRule(code);
   }
 
-  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
+  @ApiCodeParam()
   @ApiOperation({ summary: 'Atualiza regra de negócio' })
-  @ApiResponse({
-    status: 200,
-    description: 'Regra de negócio atualizada com sucesso',
-  })
+  @ApiSuccessResponse(200, 'Regra atualizada com sucesso')
+  @ApiErrorResponse(
+    404,
+    'Regra não encontrada',
+    'Regra de negócio não encontrada',
+  )
   @Put(':code')
   update(@Param('code') code: string, @Body() dto: UpdateBusinessRuleDto) {
     return this.service.update(code, dto);
   }
 
-  @ApiParam({ name: 'code', description: 'Código da regra de negócio' })
+  @ApiCodeParam()
   @ApiOperation({ summary: 'Desativa regra de negócio' })
-  @ApiResponse({
-    status: 200,
-    description: 'Regra de negócio desativada com sucesso',
-  })
+  @ApiSuccessResponse(200, 'Regra desativada com sucesso')
   @Patch(':code/deactivate')
   deactivate(@Param('code') code: string) {
     return this.service.deactivate(code);
