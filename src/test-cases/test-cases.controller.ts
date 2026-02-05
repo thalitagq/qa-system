@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -19,6 +20,7 @@ import {
   ApiSuccessResponse,
   ApiErrorResponse,
 } from '@/common/swagger';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @ApiTags('Casos de teste')
 @Controller('test-cases')
@@ -73,6 +75,18 @@ export class TestCasesController {
   @Get(':id/rules')
   findBusinessRulesByTestCaseId(@Param('id') id: string) {
     return this.service.findBusinessRulesByTestCaseId(id);
+  }
+
+  @ApiOperation({ summary: 'Lista casos de teste com paginação' })
+  @ApiSuccessResponse(200, 'Lista de casos de teste')
+  @ApiErrorResponse(
+    404,
+    'Não há casos de teste para essa busca',
+    'Não há casos de teste para essa busca',
+  )
+  @Get()
+  findAll(@Query() pagination: PaginationDto) {
+    return this.service.findAll(pagination);
   }
 
   @ApiIdParam()

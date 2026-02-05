@@ -11,6 +11,11 @@ import {
   ensureTestCaseExists,
 } from '../common/helpers/ensure-exists';
 import { BAD_REQUEST_MESSAGES } from '../common/messages/error-messages';
+import { PaginationDto } from '@/common/dto/pagination.dto';
+import {
+  buildPaginationMeta,
+  getPaginationParams,
+} from '@/common/helpers/pagination';
 
 @Injectable()
 export class TestCaseService {
@@ -129,5 +134,28 @@ export class TestCaseService {
       },
       include: { rules: true },
     });
+  }
+
+  async findAll({ page, limit }: PaginationDto) {
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.testCase.findMany({
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          project: true,
+          rules: true,
+          steps: true,
+        },
+      }),
+      this.prisma.testCase.count(),
+    ]);
+
+    return {
+      data: items,
+      meta: buildPaginationMeta(total, page, limit),
+    };
   }
 }
