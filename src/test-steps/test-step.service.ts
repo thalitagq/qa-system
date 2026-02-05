@@ -10,6 +10,11 @@ import {
   BAD_REQUEST_MESSAGES,
   NOT_FOUND_MESSAGES,
 } from '@/common/messages/error-messages';
+import {
+  buildPaginationMeta,
+  getPaginationParams,
+} from '@/common/helpers/pagination';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @Injectable()
 export class TestStepService {
@@ -77,13 +82,25 @@ export class TestStepService {
     });
   }
 
-  async findByTestCaseId(testCaseId: string) {
+  async findByTestCaseId(testCaseId: string, { page, limit }: PaginationDto) {
     await ensureTestCaseExists(this.prisma, testCaseId);
 
-    return this.prisma.testStep.findMany({
-      where: { testCaseId },
-      orderBy: { order: 'asc' },
-    });
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.testStep.findMany({
+        where: { testCaseId },
+        skip,
+        take,
+        orderBy: { order: 'asc' },
+      }),
+      this.prisma.testStep.count({ where: { testCaseId } }),
+    ]);
+
+    return {
+      data: items,
+      meta: buildPaginationMeta(total, page, limit),
+    };
   }
 
   private async ensureExists(id: string, testCaseId: string) {

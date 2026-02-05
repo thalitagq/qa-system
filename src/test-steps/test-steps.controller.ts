@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TestStepService } from './test-step.service';
 import { CreateTestStepDto, UpdateTestStepDto } from './test-step.dto';
@@ -7,6 +15,7 @@ import {
   ApiSuccessResponse,
   ApiErrorResponse,
 } from '@/common/swagger';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @ApiTags('Passos de teste')
 @Controller('test-steps')
@@ -75,8 +84,11 @@ export class TestStepsController {
     'Caso de teste não encontrado',
   )
   @Get(':testCaseId')
-  findByTestCaseId(@Param('testCaseId') testCaseId: string) {
-    return this.service.findByTestCaseId(testCaseId);
+  findByTestCaseId(
+    @Param('testCaseId') testCaseId: string,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.service.findByTestCaseId(testCaseId, pagination);
   }
 
   @ApiIdParam('testCaseId', 'ID do caso de teste')
