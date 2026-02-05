@@ -15,6 +15,11 @@ import {
   BAD_REQUEST_MESSAGES,
   NOT_FOUND_MESSAGES,
 } from '../common/messages/error-messages';
+import {
+  buildPaginationMeta,
+  getPaginationParams,
+} from '@/common/helpers/pagination';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @Injectable()
 export class BusinessRuleService {
@@ -98,14 +103,34 @@ export class BusinessRuleService {
     });
   }
 
-  async findTestCasesByBusinessRule(ruleCode: string) {
+  async findTestCasesByBusinessRule(
+    ruleCode: string,
+    { page, limit }: PaginationDto,
+  ) {
     await ensureBusinessRuleExists(this.prisma, ruleCode);
 
-    return this.prisma.testCase.findMany({
-      where: {
-        rules: { some: { code: ruleCode } },
-      },
-    });
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.testCase.findMany({
+        where: {
+          rules: { some: { code: ruleCode } },
+        },
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.testCase.count({
+        where: {
+          rules: { some: { code: ruleCode } },
+        },
+      }),
+    ]);
+
+    return {
+      data: items,
+      meta: buildPaginationMeta(total, page, limit),
+    };
   }
 
   private generateCode(): string {

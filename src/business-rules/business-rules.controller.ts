@@ -1,4 +1,13 @@
-import { Body, Controller, Param, Post, Get, Patch, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  Post,
+  Get,
+  Patch,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BusinessRuleService } from './business-rule.service';
 import {
@@ -10,6 +19,7 @@ import {
   ApiErrorResponse,
   ApiSuccessResponse,
 } from '@/common/swagger';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @ApiTags('Regras de negócio')
 @Controller('business-rules')
@@ -55,8 +65,11 @@ export class BusinessRuleController {
     { id: 'uuid', title: 'CT-Login válido' },
   ])
   @Get(':code/test-cases')
-  findTestCasesByBusinessRule(@Param('code') code: string) {
-    return this.service.findTestCasesByBusinessRule(code);
+  findTestCasesByBusinessRule(
+    @Param('code') code: string,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.service.findTestCasesByBusinessRule(code, pagination);
   }
 
   @ApiCodeParam()
