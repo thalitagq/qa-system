@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto, UpdateProjectDto } from './project.dto';
@@ -7,6 +15,7 @@ import {
   ApiSuccessResponse,
   ApiErrorResponse,
 } from '@/common/swagger';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @ApiTags('Projetos')
 @Controller('projects')
@@ -29,8 +38,8 @@ export class ProjectsController {
     { id: 'uuid', name: 'Projeto QA', active: true },
   ])
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() pagination: PaginationDto) {
+    return this.service.findAll(pagination);
   }
 
   @ApiIdParam()
