@@ -12,6 +12,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   CreateTestCaseDto,
   ReplaceTestCaseRulesDto,
+  TestCaseFilterDto,
   UpdateTestCaseDto,
 } from './test-case.dto';
 import { TestCaseService } from './test-case.service';
@@ -85,8 +86,11 @@ export class TestCasesController {
     'Não há casos de teste para essa busca',
   )
   @Get()
-  findAll(@Query() pagination: PaginationDto) {
-    return this.service.findAll(pagination);
+  findAll(
+    @Query() pagination: PaginationDto,
+    @Query() filters: TestCaseFilterDto,
+  ) {
+    return this.service.findAll(pagination, filters);
   }
 
   @ApiIdParam()

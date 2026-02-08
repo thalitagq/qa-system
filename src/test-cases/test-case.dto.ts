@@ -4,10 +4,12 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Length,
+  MinLength,
 } from 'class-validator';
 import { TestStatus, TestType } from '../../generated/prisma/enums';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TEST_STATUS_DESCRIPTION, TEST_TYPE_DESCRIPTION } from '@/common/enums';
 
 export class CreateTestCaseDto {
@@ -94,4 +96,26 @@ export class ReplaceTestCaseRulesDto {
   })
   @IsArray()
   ruleCodes: string[];
+}
+
+export class TestCaseFilterDto {
+  @ApiPropertyOptional({ enum: TestStatus })
+  @IsOptional()
+  @IsEnum(TestStatus)
+  status?: TestStatus;
+
+  @ApiPropertyOptional({ enum: TestType })
+  @IsOptional()
+  @IsEnum(TestType)
+  type?: TestType;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  projectId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  search?: string;
 }

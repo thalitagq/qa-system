@@ -4,7 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateTestCaseDto, UpdateTestCaseDto } from './test-case.dto';
+import {
+  CreateTestCaseDto,
+  TestCaseFilterDto,
+  UpdateTestCaseDto,
+} from './test-case.dto';
 import {
   ensureBusinessRuleExists,
   ensureProjectExists,
@@ -16,6 +20,7 @@ import {
   buildPaginationMeta,
   getPaginationParams,
 } from '@/common/helpers/pagination';
+import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
 export class TestCaseService {
@@ -136,11 +141,30 @@ export class TestCaseService {
     });
   }
 
-  async findAll({ page, limit }: PaginationDto) {
+  async findAll({ page, limit }: PaginationDto, filters: TestCaseFilterDto) {
     const { skip, take } = getPaginationParams(page, limit);
+
+    const where: Prisma.TestCaseWhereInput = {
+      ...(filters.status && { status: filters.status }),
+      ...(filters.type && { type: filters.type }),
+      ...(filters.projectId && { projectId: filters.projectId }),
+
+      ...(filters.search && {
+        OR: [
+          { title: { contains: filters.search, mode: 'insensitive' } },
+          {
+            description: {
+              contains: filters.search,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      }),
+    };
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.testCase.findMany({
+        where,
         skip,
         take,
         orderBy: { createdAt: 'desc' },
