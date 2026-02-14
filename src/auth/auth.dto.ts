@@ -9,11 +9,11 @@ import {
 import { Role } from 'generated/prisma/client';
 
 export class RegisterDto {
-  @ApiProperty({ example: 'Thalita' })
+  @ApiProperty({ example: 'Joe' })
   @IsString()
   name: string;
 
-  @ApiProperty({ example: 'thalita@email.com' })
+  @ApiProperty({ example: 'joe@email.com' })
   @IsEmail()
   email: string;
 
@@ -22,10 +22,8 @@ export class RegisterDto {
   @MinLength(8)
   password: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
   @ApiProperty({ enum: Object.values(Role), required: false, example: Role.QA })
   @IsOptional()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   @IsEnum(Role)
   role?: Role;
 }

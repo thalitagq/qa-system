@@ -27,6 +27,7 @@ async function bootstrap() {
       'API para gestão de projetos, casos de teste, regras de negócio e passos de teste',
     )
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
