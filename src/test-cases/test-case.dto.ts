@@ -119,3 +119,32 @@ export class TestCaseFilterDto {
   @MinLength(2)
   search?: string;
 }
+
+export enum OrderDirection {
+  asc = 'asc',
+  desc = 'desc',
+}
+
+export enum TestCaseOrderBy {
+  createdAt = 'createdAt',
+  title = 'title',
+  status = 'status',
+}
+
+export class OrderDto {
+  @ApiPropertyOptional({
+    enum: TestCaseOrderBy,
+    default: TestCaseOrderBy.createdAt,
+  })
+  @IsOptional()
+  @IsEnum(TestCaseOrderBy)
+  orderBy?: TestCaseOrderBy;
+
+  @ApiPropertyOptional({
+    enum: OrderDirection,
+    default: OrderDirection.desc,
+  })
+  @IsOptional()
+  @IsEnum(OrderDirection)
+  direction?: OrderDirection;
+}

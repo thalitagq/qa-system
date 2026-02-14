@@ -20,10 +20,15 @@ import {
   getPaginationParams,
 } from '@/common/helpers/pagination';
 import { PaginationDto } from '@/common/dto/pagination.dto';
+import { CacheKeys } from '@/common/cache/cache-keys';
+import { RedisService } from '@/redis/redis.service';
 
 @Injectable()
 export class BusinessRuleService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async create(dto: CreateBusinessRuleDto) {
     const normalizedTitle = normalizeText(dto.title);
@@ -48,15 +53,21 @@ export class BusinessRuleService {
   }
 
   async findByCode(code: string) {
-    const businessRule = await this.prisma.businessRule.findUnique({
+    const cacheKey = CacheKeys.businessRuleByCode(code);
+
+    const cached = await this.redis.get<string>(cacheKey);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    if (cached) return JSON.parse(cached);
+
+    const rule = await this.prisma.businessRule.findUnique({
       where: { code },
     });
 
-    if (!businessRule) {
-      throw new NotFoundException(NOT_FOUND_MESSAGES.BUSINESS_RULE);
-    }
+    if (!rule) throw new NotFoundException(NOT_FOUND_MESSAGES.BUSINESS_RULE);
 
-    return businessRule;
+    await this.redis.set(cacheKey, JSON.stringify(rule), 120);
+
+    return rule;
   }
 
   async update(code: string, dto: UpdateBusinessRuleDto) {

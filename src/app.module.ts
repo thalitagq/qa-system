@@ -4,6 +4,7 @@ import { BusinessRulesModule } from './business-rules/business-rules.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TestCasesModule } from './test-cases/test-cases.module';
 import { TestStepsModule } from './test-steps/test-steps.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { TestStepsModule } from './test-steps/test-steps.module';
     ProjectsModule,
     TestCasesModule,
     TestStepsModule,
+    RedisModule,
   ],
 })
 export class AppModule {}

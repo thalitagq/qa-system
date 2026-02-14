@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   CreateTestCaseDto,
+  OrderDto,
   TestCaseFilterDto,
   UpdateTestCaseDto,
 } from './test-case.dto';
@@ -21,15 +22,23 @@ import {
   getPaginationParams,
 } from '@/common/helpers/pagination';
 import { Prisma } from 'generated/prisma/client';
+import { RedisService } from '@/redis/redis.service';
+import {
+  CacheInvalidationPatterns,
+  CacheKeys,
+} from '@/common/cache/cache-keys';
 
 @Injectable()
 export class TestCaseService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async create(projectId: string, dto: CreateTestCaseDto) {
     await ensureProjectExists(this.prisma, projectId);
 
-    return this.prisma.testCase.create({
+    const created = await this.prisma.testCase.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -38,9 +47,22 @@ export class TestCaseService {
         type: dto.type,
       },
     });
+
+    await this.redis.del(CacheInvalidationPatterns.testCases);
+    await this.redis.del(CacheKeys.testCaseById(created.id));
+
+    return created;
   }
 
   async findById(id: string) {
+    const cacheKey = CacheKeys.testCaseById(id);
+
+    const cached = await this.redis.get<string>(cacheKey);
+    if (cached) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return JSON.parse(cached);
+    }
+
     const testCase = await this.prisma.testCase.findUnique({
       where: { id },
       include: { project: true, rules: true, steps: true },
@@ -50,13 +72,19 @@ export class TestCaseService {
       throw new NotFoundException('Caso de teste não encontrado');
     }
 
+    await this.redis.set(
+      cacheKey,
+      JSON.stringify(testCase),
+      60, // TTL
+    );
+
     return testCase;
   }
 
   async update(id: string, dto: UpdateTestCaseDto) {
     await ensureTestCaseExists(this.prisma, id);
 
-    return this.prisma.testCase.update({
+    const updated = await this.prisma.testCase.update({
       where: { id },
       data: {
         title: dto.title,
@@ -65,6 +93,11 @@ export class TestCaseService {
         status: dto.status,
       },
     });
+
+    await this.redis.del(CacheInvalidationPatterns.testCases);
+    await this.redis.del(CacheKeys.testCaseById(id));
+
+    return updated;
   }
 
   async addRule(testCaseId: string, ruleCode: string) {
@@ -84,6 +117,8 @@ export class TestCaseService {
       throw new BadRequestException(BAD_REQUEST_MESSAGES.RULE_ALREADY_LINKED);
     }
 
+    await this.redis.del(CacheInvalidationPatterns.testCases);
+
     return this.prisma.testCase.update({
       where: { id: testCaseId },
       data: {
@@ -99,6 +134,8 @@ export class TestCaseService {
     await ensureTestCaseExists(this.prisma, testCaseId);
 
     await ensureBusinessRuleExists(this.prisma, ruleCode);
+
+    await this.redis.del(CacheInvalidationPatterns.testCases);
 
     return this.prisma.testCase.update({
       where: { id: testCaseId },
@@ -130,6 +167,8 @@ export class TestCaseService {
       throw new BadRequestException(BAD_REQUEST_MESSAGES.INVALID_RULE);
     }
 
+    await this.redis.del(CacheInvalidationPatterns.testCases);
+
     return this.prisma.testCase.update({
       where: { id: testCaseId },
       data: {
@@ -141,14 +180,30 @@ export class TestCaseService {
     });
   }
 
-  async findAll({ page, limit }: PaginationDto, filters: TestCaseFilterDto) {
+  async findAll(
+    { page, limit }: PaginationDto,
+    filters: TestCaseFilterDto,
+    order: OrderDto,
+  ) {
     const { skip, take } = getPaginationParams(page, limit);
+
+    const cacheKey = CacheKeys.testCasesList({
+      page,
+      limit,
+      ...filters,
+      ...order,
+    });
+
+    const cached = await this.redis.get<string>(cacheKey);
+    if (cached) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return JSON.parse(cached);
+    }
 
     const where: Prisma.TestCaseWhereInput = {
       ...(filters.status && { status: filters.status }),
       ...(filters.type && { type: filters.type }),
       ...(filters.projectId && { projectId: filters.projectId }),
-
       ...(filters.search && {
         OR: [
           { title: { contains: filters.search, mode: 'insensitive' } },
@@ -162,24 +217,32 @@ export class TestCaseService {
       }),
     };
 
+    const orderByClause = {
+      [order.orderBy ?? 'createdAt']: order.direction ?? 'desc',
+    };
+
     const [items, total] = await this.prisma.$transaction([
       this.prisma.testCase.findMany({
         where,
         skip,
         take,
-        orderBy: { createdAt: 'desc' },
+        orderBy: orderByClause,
         include: {
           project: true,
           rules: true,
           steps: true,
         },
       }),
-      this.prisma.testCase.count(),
+      this.prisma.testCase.count({ where }),
     ]);
 
-    return {
+    const result = {
       data: items,
       meta: buildPaginationMeta(total, page, limit),
     };
+
+    await this.redis.set(cacheKey, JSON.stringify(result), 60);
+
+    return result;
   }
 }
