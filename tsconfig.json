@@ -20,5 +20,6 @@
       "@/*": ["src/*"],
       "@prisma/*": ["prisma/*"]
     },
+    "types": ["node", "jest"]
   }
 }
