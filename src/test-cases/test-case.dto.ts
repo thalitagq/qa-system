@@ -8,7 +8,7 @@ import {
   Length,
   MinLength,
 } from 'class-validator';
-import { TestStatus, TestType } from '../../generated/prisma/enums';
+import { TestStatus, TestType } from '../../generated/prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TEST_STATUS_DESCRIPTION, TEST_TYPE_DESCRIPTION } from '@/common/enums';
 

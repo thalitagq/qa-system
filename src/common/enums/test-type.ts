@@ -1,4 +1,4 @@
-import { TestType } from 'generated/prisma/enums';
+import { TestType } from '../../../generated/prisma/client';
 
 export const TEST_TYPE_DESCRIPTION: Record<TestType, string> = {
   ANALYSIS: 'Teste de análise',
