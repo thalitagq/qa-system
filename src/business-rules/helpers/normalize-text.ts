@@ -11,17 +11,6 @@ const STOPWORDS = new Set([
 ]);
 
 export function normalizeText(text: string): string {
-  const words = text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ');
-
-  console.log(words.map(w => `${JSON.stringify(w)} => ${STOPWORDS.has(w)}`));
-
   return text
     .toLowerCase()
     .normalize('NFD')

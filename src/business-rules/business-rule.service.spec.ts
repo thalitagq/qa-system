@@ -1,4 +1,3 @@
-import { describe } from 'node:test';
 import { BusinessRuleService } from './business-rule.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -133,6 +132,29 @@ void describe('businessRuleService', () => {
       } as BusinessRule);
 
       expect(result.title).toBe('Nova');
+    });
+
+    it('deve rejeitar título equivalente ao de outra regra', async () => {
+      prismaMock.businessRule.findUnique
+        .mockResolvedValueOnce({
+          code: 'BR-1',
+          title: 'Pagamento pendente',
+          normalizedTitle: 'pagamento pendente',
+        })
+        .mockResolvedValueOnce({
+          code: 'BR-2',
+          title: 'Aprovação de crédito',
+          normalizedTitle: 'aprovacao credito',
+        });
+
+      await expect(
+        service.update('BR-1', { title: '  APROVAÇÃO de CRÉDITO!!!  ' }),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(prismaMock.businessRule.findUnique).toHaveBeenNthCalledWith(2, {
+        where: { normalizedTitle: 'aprovacao credito' },
+      });
+      expect(prismaMock.businessRule.update).not.toHaveBeenCalled();
     });
   });
 
