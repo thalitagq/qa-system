@@ -9,8 +9,13 @@ import {
   MinLength,
 } from 'class-validator';
 import { TestStatus, TestType } from '../../generated/prisma/client';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  IntersectionType,
+} from '@nestjs/swagger';
 import { TEST_STATUS_DESCRIPTION, TEST_TYPE_DESCRIPTION } from '@/common/enums';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 export class CreateTestCaseDto {
   @ApiProperty({
@@ -148,3 +153,9 @@ export class OrderDto {
   @IsEnum(OrderDirection)
   direction?: OrderDirection;
 }
+
+export class ListTestCasesQueryDto extends IntersectionType(
+  PaginationDto,
+  TestCaseFilterDto,
+  OrderDto,
+) {}

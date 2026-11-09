@@ -11,9 +11,8 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   CreateTestCaseDto,
-  OrderDto,
+  ListTestCasesQueryDto,
   ReplaceTestCaseRulesDto,
-  TestCaseFilterDto,
   UpdateTestCaseDto,
 } from './test-case.dto';
 import { TestCaseService } from './test-case.service';
@@ -22,7 +21,6 @@ import {
   ApiSuccessResponse,
   ApiErrorResponse,
 } from '@/common/swagger';
-import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @ApiTags('Casos de teste')
 @Controller('test-cases')
@@ -87,12 +85,16 @@ export class TestCasesController {
     'Não há casos de teste para essa busca',
   )
   @Get()
-  findAll(
-    @Query() pagination: PaginationDto,
-    @Query() filters: TestCaseFilterDto,
-    @Query() order: OrderDto,
-  ) {
-    return this.service.findAll(pagination, filters, order);
+  findAll(@Query() query: ListTestCasesQueryDto) {
+    const { page, limit } = query;
+    const { status, type, projectId, search } = query;
+    const { orderBy, direction } = query;
+
+    return this.service.findAll(
+      { page, limit },
+      { status, type, projectId, search },
+      { orderBy, direction },
+    );
   }
 
   @ApiIdParam()
