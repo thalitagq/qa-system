@@ -60,16 +60,18 @@ export class TestStepService {
 
     await this.ensureExists(testStepId, testCaseId);
 
-    const orderExists = await this.prisma.testStep.findFirst({
-      where: {
-        testCaseId,
-        order: dto.order,
-        NOT: { id: testStepId },
-      },
-    });
+    if (dto.order !== undefined) {
+      const orderExists = await this.prisma.testStep.findFirst({
+        where: {
+          testCaseId,
+          order: dto.order,
+          NOT: { id: testStepId },
+        },
+      });
 
-    if (orderExists) {
-      throw new BadRequestException(BAD_REQUEST_MESSAGES.STEP_ORDER_EXISTS);
+      if (orderExists) {
+        throw new BadRequestException(BAD_REQUEST_MESSAGES.STEP_ORDER_EXISTS);
+      }
     }
 
     return this.prisma.testStep.update({

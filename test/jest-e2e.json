@@ -1,9 +1,24 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.ts$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@prisma/(.*)$": [
+      "<rootDir>/prisma/$1",
+      "<rootDir>/node_modules/@prisma/$1"
+    ],
+    "^prisma/(.*)$": [
+      "<rootDir>/prisma/$1",
+      "<rootDir>/node_modules/prisma/$1"
+    ],
+    "^generated/(.*)$": "<rootDir>/generated/$1"
+  },
+  "setupFiles": ["<rootDir>/test/integration/setup-env.ts"],
+  "testTimeout": 30000,
+  "maxWorkers": 1
 }

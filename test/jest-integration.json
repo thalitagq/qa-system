@@ -1,0 +1,20 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "roots": ["<rootDir>/test/integration"],
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/test/integration/**/*.integration-spec.ts"],
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@prisma/(.*)$": [
+      "<rootDir>/prisma/$1",
+      "<rootDir>/node_modules/@prisma/$1"
+    ],
+    "^generated/(.*)$": "<rootDir>/generated/$1"
+  },
+  "setupFiles": ["<rootDir>/test/integration/setup-env.ts"],
+  "testTimeout": 30000
+}
