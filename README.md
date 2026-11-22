@@ -57,6 +57,43 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Testes do PDI — Escola da Nuvem
+
+[![Tests](https://github.com/thalitagq/qa-system/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/thalitagq/qa-system/actions/workflows/tests.yml)
+
+A estratégia de testes do QA-System para o PDI da Escola da Nuvem combina três níveis:
+
+| Suíte | Estratégia | Resultado |
+| --- | --- | --- |
+| Unitários | Validam comportamentos isolados, com dependências simuladas. | 23 aprovados |
+| Integração | Exercitam serviços e Prisma reais com PostgreSQL isolado. | 2 aprovados |
+| E2E | Validam o fluxo HTTP com NestJS, Supertest e banco real. | 1 aprovado |
+
+**Cenários implementados:**
+
+- **INT-01:** persiste um TestStep válido pelo serviço e confere os dados no PostgreSQL.
+- **INT-02:** tenta inserir diretamente pelo Prisma dois TestSteps com o mesmo `testCaseId + order`, verifica o erro `P2002` e confirma que somente o primeiro foi persistido.
+- **E2E-01:** cria um projeto via `POST /projects`, valida HTTP 201, os dados retornados e a persistência no banco.
+
+**Execução das suítes:**
+
+```bash
+# Unitários
+npm test -- --runInBand
+
+# Integração
+npm run test:integration
+
+# E2E
+npm run test:e2e
+```
+
+Integração e E2E usam exclusivamente o PostgreSQL `qa_system_test`, separado do banco de desenvolvimento. A configuração lê `TEST_DATABASE_URL` de `.env.test` (ignorado pelo Git) e valida o destino antes da conexão. Cada cenário remove apenas seus próprios registros.
+
+O [workflow de testes](.github/workflows/tests.yml) executa as três suítes em pushes e pull requests para `main`, com um PostgreSQL temporário.
+
+**Evidência:** [execução #1 concluída com sucesso no GitHub Actions](https://github.com/thalitagq/qa-system/actions/runs/45068988724), em 22/11/2026, na branch `main`, com **26 testes aprovados**: 23 unitários, 2 de integração e 1 E2E.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
